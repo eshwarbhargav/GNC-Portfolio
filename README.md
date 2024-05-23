@@ -16,7 +16,7 @@ Guidance, Navigation, and Control (GNC) are critical components of many engineer
 
 ## Projects
 
-At the moment this list is empty! Will update the file once they are ready.
+At the moment this project's list is empty! Will update the file once they are ready.
 
 ## Getting Started
 
@@ -31,16 +31,25 @@ To get started with any of the projects in this repository, follow these steps:
    # Replace <PROJECT_NAME> with the name of the project
    cd GNC-Portfolio/<PROJECT_NAME>
    ```
-3. **Follow the instructions in the project's README.md file to set up and run the application.**
+3. **Follow the instructions in the project's `README.md` file to set up and run the application.**
 
 ## Contributing
 
 Contributions are welcome! 
 
-If you have suggestions for improvements or new features, please feel free to open an issue or submit a pull request. Before contributing, please read the [contributions](CONTRIBUTING.md) file for guidelines.
+If you have suggestions for improvements or new features, please feel free to open an issue or submit a pull request. 
+Before contributing, please read the [contributions](CONTRIBUTING.md) file for guidelines.
 
 ## License
 > 
 > This repository is licensed under the [CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/).
 >
 > You are free to use the code for non-commercial purposes, but you cannot distribute or modify it. For more details, see the [LICENSE](LICENSE.md) file.
+
+## Contact
+
+If you have any questions or need further information, feel free to reach out:
+   - **Email**: eshwarbhargav@gmail.com
+   - **LinkedIn**: [linkedin.com/eshwar-bhargav](https://www.linkedin.com/in/eshwar-bhargav/)
+
+Thank you for visiting the GNC-Portfolio repository! I hope you find these projects useful and informative.
