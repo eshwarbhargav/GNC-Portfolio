@@ -1,0 +1,15 @@
+{
+    "python.analysis.diagnosticSeverityOverrides": {
+        "reportMissingModuleSource": "none",
+		"reportGeneralTypeIssues": "none"
+    },
+    "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter",
+    "editor.formatOnSave": true
+    },
+    "autoDocstring.docstringFormat": "google",  // or "numpy", "sphinx"
+    "autoDocstring.generateDocstringOnEnter": true,
+    "autoDocstring.includeName": true,
+    "autoDocstring.startOnNewLine": true,
+    "autoDocstring.guessTypes": true,
+}
