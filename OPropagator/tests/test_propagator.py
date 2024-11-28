@@ -64,7 +64,9 @@ def propagator_setup(orbit_obj, pName, mass=6900.0, **kwargs):
             iSolver="NONSTIFF",
         )
         propagator, states = initPropagator.set_model(
-            model="N_BODY", bodies=[], forces=["GRAVITY"]
+            model="N_BODY",
+            bodies=["SUN", "MOON"],
+            forces=["GRAVITY", "SOLID", "OCEAN", "DRAG", "RELATIVITY"],
         )
     elif pName in ["Kepler", "Eckstein-Heschler", "Brouwer-Lyddane", "TLE"]:
         # High fidelity model - SGP4

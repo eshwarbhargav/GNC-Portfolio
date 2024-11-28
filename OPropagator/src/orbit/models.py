@@ -1,6 +1,7 @@
 # Standards
 from org.orekit.frames import FramesFactory
 from org.orekit.utils import Constants, IERSConventions
+from org.orekit.time import TimeScalesFactory
 
 # Hipparchus library
 from org.hipparchus.ode.nonstiff import (
@@ -22,12 +23,18 @@ from org.hipparchus.ode.nonstiff import (
 
 # File-specific
 from orekit import JArray_double
-from org.orekit.bodies import CelestialBodyFactory
+from org.orekit.bodies import CelestialBodyFactory, OneAxisEllipsoid
+from org.orekit.forces.drag import DragForce, IsotropicDrag
 from org.orekit.forces.gravity import (
     ThirdBodyAttraction,
     HolmesFeatherstoneAttractionModel,
+    Relativity,
+    OceanTides,
+    SolidTides,
 )
 from org.orekit.forces.gravity.potential import GravityFieldFactory
+from org.orekit.models.earth.atmosphere import NRLMSISE00
+from org.orekit.models.earth.atmosphere.data import CssiSpaceWeatherData
 from org.orekit.propagation import SpacecraftState
 from org.orekit.propagation.analytical import (
     KeplerianPropagator,
@@ -430,47 +437,111 @@ class InitPropagator:
         forces = kwargs.get("forces", [])
         print("DYNAMIC MODEL")
         print(f"    {model}")
+        n_bodies = [
+            "EARTH",
+            "JUPITER",
+            "MARS",
+            "MERCURY",
+            "MOON",
+            "NEPTUNE",
+            "PLUTO",
+            "SATURN",
+            "SUN",
+            "URANUS",
+            "VENUS",
+        ]
+        non_planets = ["EARTH_MOON", "SOLAR_SYSTEM_BARYCENTER"]
         if model == "TWO_BODY":
             pass
         elif model == "N_BODY":
             if bodies:
                 for b in bodies:
-                    if b in [
-                        "EARTH",
-                        "EARTH_MOON",
-                        "JUPITER",
-                        "MARS",
-                        "MERCURY",
-                        "MOON",
-                        "NEPTUNE",
-                        "PLUTO",
-                        "SATURN",
-                        "SOLAR_SYSTEM_BARYCENTER",
-                        "SUN",
-                        "URANUS",
-                        "VENUS",
-                    ]:
+                    if b == "ALL":
+                        for bb in n_bodies:
+                            if bb in non_planets or bb == "EARTH":
+                                pass
+                            else:
+                                body = CelestialBodyFactory.getBody(bb)
+                                print(f"        {bb}")
+                        self.propagator.addForceModel(ThirdBodyAttraction(body))
+                    elif b in (n_bodies + non_planets):
                         body = CelestialBodyFactory.getBody(b)
+                        self.propagator.addForceModel(ThirdBodyAttraction(body))
                         print(f"        {b}")
                     else:
                         raise NameError("The requested body is not defined")
-                    self.propagator.addForceModel(ThirdBodyAttraction(body))
         else:
             raise NameError("The requested model is not defined")
 
         if forces and (self.propagatorModel == "NUMERICAL"):
             print(f"    ACTIVE FORCES")
             for f in forces:
+                # Body-centric Frame
+                ITRF_frame = FramesFactory.getITRF(IERSConventions.IERS_2010, True)
+                # Normalized Spherical Harmonics Provider
+                degree = 100
+                order = 100
+                gravityProvider = GravityFieldFactory.getNormalizedProvider(
+                    degree, order
+                )
                 if f == "GRAVITY":
-                    gravityProvider = GravityFieldFactory.getNormalizedProvider(10, 10)
                     self.propagator.addForceModel(
                         HolmesFeatherstoneAttractionModel(
-                            FramesFactory.getITRF(IERSConventions.IERS_2010, True),
+                            ITRF_frame,
                             gravityProvider,
                         )
                     )
                     print(f"        {f}")
+                elif f == "SOLID":
+                    # Add solid tides
+                    solid_tides = SolidTides(
+                        ITRF_frame,
+                        gravityProvider.getAe(),
+                        gravityProvider.getMu(),
+                        gravityProvider.getTideSystem(),
+                        IERSConventions.IERS_2010,
+                        TimeScalesFactory.getUT1(IERSConventions.IERS_2010, True),
+                        [CelestialBodyFactory.getSun(), CelestialBodyFactory.getMoon()],
+                    )
+                    self.propagator.addForceModel(solid_tides)
+                    print(f"        {f}")
+                elif f == "OCEAN":
+                    # Add solid tides
+                    ocean_tides = OceanTides(
+                        ITRF_frame,
+                        gravityProvider.getAe(),
+                        gravityProvider.getMu(),
+                        degree,
+                        order,
+                        IERSConventions.IERS_2010,
+                        TimeScalesFactory.getUT1(IERSConventions.IERS_2010, True),
+                    )
+                    self.propagator.addForceModel(ocean_tides)
+                    print(f"        {f}")
+                elif f == "DRAG":
+                    # Define earth body
+                    earthBody = OneAxisEllipsoid(
+                        Constants.WGS84_EARTH_EQUATORIAL_RADIUS,  # Equatorial radius (meters)
+                        Constants.WGS84_EARTH_FLATTENING,  # Flattening
+                        ITRF_frame,  # Reference frame
+                    )
+                    # Atmosphere model
+                    atmosphere = NRLMSISE00(
+                        CssiSpaceWeatherData("SpaceWeather-All-v1.2.txt"),
+                        CelestialBodyFactory.getSun(),
+                        earthBody,
+                    )
+                    # Define spacecraft shape and drag coefficient
+                    drag_shape = IsotropicDrag(
+                        2.2, 11.0
+                    )  # CD = 2.2, Surface Area = 11.0 m²
+                    self.propagator.addForceModel(DragForce(atmosphere, drag_shape))
+                    print(f"        {f}")
+                elif f == "RELATIVITY":
+                    relativity = Relativity(Constants.WGS84_EARTH_MU)
+                    self.propagator.addForceModel(relativity)
+                    print(f"        {f}")
                 else:
-                    raise NameError("The requested force model is not defined")
+                    raise NameError(f"The requested force model {f} is not defined")
 
         return self.propagator, self.propagator_states

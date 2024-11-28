@@ -1,6 +1,6 @@
 # Project Structure
 
-'''
+```
 OPropagator/
 ├── docs/                       # Documentation
 │   └── overview.md             # Explanation of the model and its features
@@ -24,4 +24,4 @@ OPropagator/
 ├── main.py                     # Main entry point of the program
 ├── README.md                   # Project overview and setup instructions
 └── requirements.txt            # List of dependencies
-'''
+```
